@@ -77,4 +77,4 @@ accuracy = sum(YPredicted == YTest)/numel(YTest)
 figure
 plotconfusion(YTest,YPredicted);
 
-% accuracy = 0.35
+% accuracy = 0.33
