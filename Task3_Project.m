@@ -42,8 +42,8 @@ imdsTest.ReadFcn = @(x)repmat(imresize(imread(x),[227 227]),1,1,3);
 %tha last fully connected is in position 23 of 25
 layers_to_transfer = net.Layers(1:end-3);
 for i=1:numel(layers_to_transfer)
-   if(isprop(net.Layers(i), 'WeightsLearnRateFactor')) %check if that property exists
-       net.Layers(i).WeightsLearnRateFactor(i) = 0;
+   if(isprop(net.Layers(i), 'WeightLearnRateFactor')) %check if that property exists
+       layers_to_transfer(i).WeightLearnRateFactor = 0;
    end    
 end    
 
@@ -52,8 +52,8 @@ end
 
 layers = [layers_to_transfer
            %parametri messi a caso , DA CAMBIARE
-           fullyConnectedLayer(15, 'WeightLearnRateFactor', 2, ...
-                                'BiasLearnRateFactor', 5)
+           fullyConnectedLayer(15, 'WeightLearnRateFactor', 1, ...
+                                'BiasLearnRateFactor', 2)
            
            softmaxLayer
            
@@ -64,7 +64,7 @@ options = trainingOptions('adam', ...
     'ValidationData',imdsValidation, ...
     'MaxEpochs', 50, ...
     'InitialLearnRate', 0.0001, ...
-    'ValidationPatience',5,...
+    'ValidationPatience',20,...
     'Verbose',false, ...
     'Shuffle', 'every-epoch', ...
     'MiniBatchSize',64, ... %provare con 64
@@ -92,8 +92,8 @@ plotconfusion(YTest,YPredicted)
 
 %Feature Extraction
 
-feature_train = activations(net, augmented_train, 'fc7', 'OutputAs', 'rows');
-feature_test = activations(net, imdsTest, 'fc7', 'OutputAs', 'rows');
+feature_train = activations(net, augmented_train, 'fc6', 'OutputAs', 'rows');
+feature_test = activations(net, imdsTest, 'fc6', 'OutputAs', 'rows');
 
 %Extract labels
 YTrain1 = imdsTrain.Labels;
