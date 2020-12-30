@@ -24,7 +24,7 @@ quotaForEachLabel=0.85;
 
 %% Data Augmentation
 augmenter = imageDataAugmenter(...
-            'RandYReflection', true);
+            'RandXReflection', true);
 augmented_train = augmentedImageDatastore([227 227 3], imdsTrain, 'DataAugmentation', augmenter);
              
 %% Resize test set
@@ -53,7 +53,7 @@ end
 layers = [layers_to_transfer
            %parametri messi a caso , DA CAMBIARE
            fullyConnectedLayer(15, 'WeightLearnRateFactor', 1, ...
-                                'BiasLearnRateFactor', 2)
+                                'BiasLearnRateFactor', 1)
            
            softmaxLayer
            
@@ -64,7 +64,7 @@ options = trainingOptions('adam', ...
     'ValidationData',imdsValidation, ...
     'MaxEpochs', 50, ...
     'InitialLearnRate', 0.0001, ...
-    'ValidationPatience',20,...
+    'ValidationPatience',5,...
     'Verbose',false, ...
     'Shuffle', 'every-epoch', ...
     'MiniBatchSize',64, ... %provare con 64
@@ -92,8 +92,8 @@ plotconfusion(YTest,YPredicted)
 
 %Feature Extraction
 
-feature_train = activations(net, augmented_train, 'fc6', 'OutputAs', 'rows');
-feature_test = activations(net, imdsTest, 'fc6', 'OutputAs', 'rows');
+feature_train = activations(net, augmented_train, 'fc7', 'OutputAs', 'rows');
+feature_test = activations(net, imdsTest, 'fc7', 'OutputAs', 'rows');
 
 %Extract labels
 YTrain1 = imdsTrain.Labels;
