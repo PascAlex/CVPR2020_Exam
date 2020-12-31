@@ -52,8 +52,8 @@ end
 
 layers = [layers_to_transfer
            %parametri messi a caso , DA CAMBIARE
-           fullyConnectedLayer(15, 'WeightLearnRateFactor', 1, ...
-                                'BiasLearnRateFactor', 1)
+           fullyConnectedLayer(15, 'WeightLearnRateFactor', 2, ...
+                                'BiasLearnRateFactor', 5)
            
            softmaxLayer
            
@@ -67,7 +67,7 @@ options = trainingOptions('adam', ...
     'ValidationPatience',5,...
     'Verbose',false, ...
     'Shuffle', 'every-epoch', ...
-    'MiniBatchSize',64, ... %provare con 64
+    'MiniBatchSize',64, ... %provare con 128
     'ExecutionEnvironment','parallel',...
     'Plots','training-progress');
 
@@ -88,6 +88,8 @@ accuracy = sum(YPredicted == YTest)/numel(YTest)
 figure
 plotconfusion(YTest,YPredicted)
 
+% accuracy around 85%
+
 %% SVM
 
 %Feature Extraction
@@ -106,12 +108,4 @@ YPred1 = predict(classifier, feature_test);
 %Accuracy
 accuracy1 = mean(YPred1 == YTest1)
 
-%% Nonlinear SVM
-
-nonlinearSVM = fitcsvm(feature_train, YTrain1, 'KernelFunction', 'RBF')
-
-
-
-
-
-
+%accuracy around 83/84%
