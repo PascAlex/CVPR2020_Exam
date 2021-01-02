@@ -1,0 +1,124 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8x]{inputenc}
+\usepackage[fleqn]{amsmath} 
+\usepackage{fancyhdr}
+\usepackage{booktabs,amsmath}
+\usepackage{geometry}                
+\usepackage{graphicx}
+\usepackage{askmaps}
+\usepackage{tikz}
+\usepackage{ucs}
+\usepackage[italian]{babel}
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{wrapfig}
+\usepackage{tocbibind}
+\usepackage{textgreek}
+\usepackage{subfig}
+\usepackage[sorting = none]{biblatex}
+\addbibresource{sample.bib}
+
+\usepackage{paralist}
+\usepackage{color}
+\usepackage[detect-weight=true, binary-units=true]{siunitx}
+\usepackage{pgfplots}
+\usepackage{authblk}
+\usepackage{multirow}
+\usepackage{subfig}
+\usepackage{multicol}
+\usepackage{changepage}
+\usepackage{booktabs}
+\usepackage{pbox}
+\usepackage{url}
+\def\UrlBreaks{\do\/\do-}
+\usepackage{breakurl}
+\usepackage[breaklinks]{hyperref}
+
+
+
+
+
+
+\begin{document}
+
+%% elimina il numero di pagina della corrente pagina:
+\thispagestyle{empty}
+%% fa si' che la pagina corrente venga contata come pagina 0, 
+%% cosi' la prossima pagina comincia da 1.
+\setcounter{page}{-2}
+
+
+
+
+\title{CVPR- PROJECT} %Da cambiare titolo
+\author[1]{Milton} %Per favore Nico metti il tuo nome che non lo so tutto ahahah
+\author[2]{Lorenzo Bonin}
+\author[3]{Ionut Alexandru Pascariu}
+
+\affil[1,2,3]{
+    Task 1,
+    Task 2,
+    Task 3,
+    writing
+}
+
+
+\date{Course of AA 2020-2021}
+\maketitle
+\thispagestyle{empty}
+\newpage
+
+
+\newcommand{\omissis}{[\textellipsis\unkern]}
+
+
+\clearpage{\pagestyle{empty}\cleardoublepage}
+
+\newpage
+\thispagestyle{empty}
+\phantom{.}
+\newpage
+
+
+\tableofcontents
+\thispagestyle{empty}
+\newpage
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Da qua si comincia a scrivere il report
+% Alcune cose
+% Per citare le figure quando le create date un nome al label e fate \ref{nome_dato da voi}
+%per citare un articolo invece \cite{e qua il primo nome dopo l'apertura della parentesi grafa che compare nella cit interessata }
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Introduction}
+
+\section{Task 1}
+
+
+\section{Task 2}\label{2}
+
+
+\section{Task 3}\label{3}
+
+
+\section{Results and discussion}
+
+
+\newpage
+\printbibliography
+\newpage
+
+
+
+
+
+\newpage
+
+
+
+\end{document}
