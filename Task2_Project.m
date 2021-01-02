@@ -342,7 +342,7 @@ for i = 1:nnets
    scores = scores + predict(net, imdsTest);   
 end
 
-avscores = totalscores/nnets;
+avscores = scores/nnets;
 
 % obtain the indexes of the predicted class
 
