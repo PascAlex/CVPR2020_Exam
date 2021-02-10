@@ -5,40 +5,67 @@ project = fullfile('dataset','train');
 imds = imageDatastore(project, ...
     'IncludeSubfolders',true,'LabelSource','foldernames');
 
-% automatic resizing
-imds.ReadFcn = @(x)imresize(imread(x),[64 64]);
-
 % split in training and validation sets: 85% - 15%
 quotaForEachLabel=0.85;
 [imdsTrain,imdsValidation] = splitEachLabel(imds,quotaForEachLabel,'randomize');
 
-%% data augmentation
 
-% left/right reflection
+%% 2.1 data augmentation
 
-augmenter = imageDataAugmenter(...
-    'RandXReflection', true)
+% it has been decided to do it by hand in order to perform the random
+% cropping as described in the project assignments; it was not possible to
+% obtain a rondom cropping window by following the imageDataAugmenter
+% approach (there would have been a window of fixed size).
+% The function used for the cropping procedure (randCrop) is defined at the end
+% of this script
 
-auimdsTrain = augmentedImageDatastore([64 64 1],imdsTrain,'DataAugmentation',augmenter);
+
+% create the transformed datasets and write them in the disk
+
+imdsCropped = transform(imdsTrain,@(x) randCrop(x));
+imdsReflected = transform(imdsTrain,@(x) flip(x, 2));
+
+location1 = 'C:\CroppedDataStore';
+writeall(imdsCropped, location1, 'OutputFormat', 'jpg', 'FilenamePrefix', 'cropped_')
+
+location2 = 'C:\ReflectedDataStore';
+writeall(imdsCropped, location2, 'OutputFormat', 'jpg', 'FilenamePrefix', 'reflected_')
+
+% create the augmented image datastore
+
+imdsCropped2 = imageDatastore( 'C:\CroppedDataStore', ... 
+    'IncludeSubfolders',true,'LabelSource','foldernames');
+
+imdsReflected2 = imageDatastore( 'C:\ReflectedDataStore', ... 
+    'IncludeSubfolders',true,'LabelSource','foldernames');
+
+
+imdsAugmented = imageDatastore(cat(1,imdsTrain.Files,imdsCropped2.Files, imdsReflected2.Files));
+imdsAugmented.Labels = cat(1,imdsTrain.Labels,imdsCropped2.Labels, imdsReflected2.Labels);
+
+% automatic resizing
+imdsValidation.ReadFcn = @(x)imresize(imread(x),[64 64]);
+imdsAugmented.ReadFcn = @(x)imresize(imread(x),[64 64]);
+
 
 % same layers and option from the task1
 
 layers = [
-    imageInputLayer([64 64 1],'Name','input','Normalization','zscore') 
+    imageInputLayer([64 64 1],'Name','input') 
     
-    convolution2dLayer(3,8,'Name','conv_1') 
+    convolution2dLayer(3,8,'Name','conv_1','WeightsInitializer','narrow-normal') 
     
     reluLayer('Name','relu_1')
 
     maxPooling2dLayer(2,'Stride',2,'Name','maxpool_1')
     
-    convolution2dLayer(3,16,'Name','conv_2')
+    convolution2dLayer(3,16,'Name','conv_2','WeightsInitializer','narrow-normal')
     
     reluLayer('Name','relu_2')
     
     maxPooling2dLayer(2,'Stride',2,'Name','maxpool_2')
     
-    convolution2dLayer(3,32,'Name','conv_3') 
+    convolution2dLayer(3,32,'Name','conv_3','WeightsInitializer','narrow-normal') 
    
     reluLayer('Name','relu_3')
     
@@ -53,16 +80,17 @@ layers = [
     
 options = trainingOptions('sgdm', ...
     'ValidationData',imdsValidation, ...
+    'InitialLearnRate', 0.001, ...
     'ValidationFrequency', 50, ...
-    'ValidationPatience', 3,...
+    'ValidationPatience', 2,...
     'Verbose',false, ...
     'MiniBatchSize',32, ...
     'ExecutionEnvironment','parallel',...
-    'Plots','training-progress')
+    'Plots','training-progress');
 
 % train the network with the new data 
 
-net = trainNetwork(auimdsTrain,layers,options);
+net = trainNetwork(imdsAugmented,layers,options);
 
 % evaluate performance on test set
 
@@ -78,20 +106,20 @@ YPredicted = classify(net,imdsTest);
 YTest = imdsTest.Labels;
 
 % overall accuracy
-accuracy = sum(YPredicted == YTest)/numel(YTest)
+accuracy1 = sum(YPredicted == YTest)/numel(YTest);
 
 % confusion matrix
 figure
 plotconfusion(YTest,YPredicted);
 
-% accuracy = 0.44
+% accuracy = 0.3819
 
-%% add batch normalization layers
+%% 2.2 add batch normalization layers
 
 layers = [
-    imageInputLayer([64 64 1],'Name','input','Normalization','zscore') 
+    imageInputLayer([64 64 1],'Name','input') 
     
-    convolution2dLayer(3,8,'Name','conv_1')
+    convolution2dLayer(3,8,'Name','conv_1','WeightsInitializer','narrow-normal')
     
     batchNormalizationLayer('Name', 'BN_1')
     
@@ -99,7 +127,7 @@ layers = [
 
     maxPooling2dLayer(2,'Stride',2,'Name','maxpool_1')
     
-    convolution2dLayer(3,16,'Name','conv_2')
+    convolution2dLayer(3,16,'Name','conv_2', 'WeightsInitializer','narrow-normal')
     
     batchNormalizationLayer('Name', 'BN_2')
     
@@ -107,7 +135,7 @@ layers = [
     
     maxPooling2dLayer(2,'Stride',2,'Name','maxpool_2')
     
-    convolution2dLayer(3,32,'Name','conv_3')
+    convolution2dLayer(3,32,'Name','conv_3', 'WeightsInitializer','narrow-normal')
     
     batchNormalizationLayer('Name', 'BN_3')
    
@@ -124,7 +152,7 @@ layers = [
    
 % training
     
-net = trainNetwork(auimdsTrain,layers,options);
+net = trainNetwork(imdsAugmented,layers,options);
 
 % evaluate performance on test set
 
@@ -140,20 +168,20 @@ YPredicted = classify(net,imdsTest);
 YTest = imdsTest.Labels;
 
 % overall accuracy
-accuracy = sum(YPredicted == YTest)/numel(YTest)
+accuracy2 = sum(YPredicted == YTest)/numel(YTest);
 
 % confusion matrix
 figure
 plotconfusion(YTest,YPredicted);
 
-% accuracy = 0.48
+% accuracy = 0.4704
 
-%% change filters' size (3*3, 5*5, 7*7)
+%% 2.3 change filters' size (3*3, 5*5, 7*7)
 
 layers = [
-    imageInputLayer([64 64 1],'Name','input','Normalization','zscore') 
+    imageInputLayer([64 64 1],'Name','input') 
     
-    convolution2dLayer(3,8,'Name','conv_1')
+    convolution2dLayer(3,8,'Name','conv_1','WeightsInitializer','narrow-normal')
     
     batchNormalizationLayer('Name', 'BN_1')
     
@@ -161,7 +189,7 @@ layers = [
 
     maxPooling2dLayer(2,'Stride',2,'Name','maxpool_1')
     
-    convolution2dLayer(5,16,'Name','conv_2')
+    convolution2dLayer(5,16,'Name','conv_2','WeightsInitializer','narrow-normal')
     
     batchNormalizationLayer('Name', 'BN_2')
     
@@ -169,7 +197,7 @@ layers = [
     
     maxPooling2dLayer(2,'Stride',2,'Name','maxpool_2')
     
-    convolution2dLayer(7,32,'Name','conv_3')
+    convolution2dLayer(7,32,'Name','conv_3','WeightsInitializer','narrow-normal')
     
     batchNormalizationLayer('Name', 'BN_3')
    
@@ -186,7 +214,7 @@ layers = [
 
 % training
 
-net = trainNetwork(auimdsTrain,layers,options);
+net = trainNetwork(imdsAugmented,layers,options);
 
 % evaluate performance on test set
 
@@ -202,26 +230,24 @@ YPredicted = classify(net,imdsTest);
 YTest = imdsTest.Labels;
 
 % overall accuracy
-accuracy = sum(YPredicted == YTest)/numel(YTest)
+accuracy3 = sum(YPredicted == YTest)/numel(YTest);
 
 % confusion matrix
 figure
 plotconfusion(YTest,YPredicted);
 
-% accuracy = 0.50
+% accuracy = 0.4566
 
-%% play with the optimization parameters
+%% 2.4 play with the optimization parameters
 
 % switch to the adam optimizer
-% learning rate = 0.001
 % minibach size = 64
 
 options = trainingOptions('adam', ...
 'InitialLearnRate', 0.001, ...
 'ValidationData',imdsValidation, ...
-'MaxEpochs', 30, ...
 'ValidationFrequency', 50, ...
-'ValidationPatience', 3,...
+'ValidationPatience', 2,...
 'Verbose',false, ...
 'MiniBatchSize',64, ...
 'ExecutionEnvironment','parallel',...
@@ -229,7 +255,7 @@ options = trainingOptions('adam', ...
 
 % training
 
-net = trainNetwork(auimdsTrain,layers,options);
+net = trainNetwork(imdsAugmented,layers,options);
 
 % evaluate performance on test set
 
@@ -245,20 +271,20 @@ YPredicted = classify(net,imdsTest);
 YTest = imdsTest.Labels;
 
 % overall accuracy
-accuracy = sum(YPredicted == YTest)/numel(YTest)
+accuracy4 = sum(YPredicted == YTest)/numel(YTest);
 
 % confusion matrix
 figure
 plotconfusion(YTest,YPredicted);
 
-% accuracy = 0.52
+% accuracy = 0.5002
 
-%% dropout layers
+%% 2.5 dropout layers
 
 layers = [
-    imageInputLayer([64 64 1],'Name','input','Normalization','zscore') 
+    imageInputLayer([64 64 1],'Name','input') 
     
-    convolution2dLayer(3,8,'Name','conv_1')
+    convolution2dLayer(3,8,'Name','conv_1','WeightsInitializer','narrow-normal')
     
     batchNormalizationLayer('Name', 'BN_1')
     
@@ -268,7 +294,7 @@ layers = [
     
     dropoutLayer(.1 , 'Name','dropout_1')
     
-    convolution2dLayer(5,16,'Name','conv_2')
+    convolution2dLayer(5,16,'Name','conv_2','WeightsInitializer','narrow-normal')
     
     batchNormalizationLayer('Name', 'BN_2')
     
@@ -278,7 +304,7 @@ layers = [
     
     dropoutLayer(.1 , 'Name','dropout_2')
     
-    convolution2dLayer(7,32,'Name','conv_3')
+    convolution2dLayer(7,32,'Name','conv_3','WeightsInitializer','narrow-normal')
     
     batchNormalizationLayer('Name', 'BN_3')
    
@@ -299,7 +325,7 @@ layers = [
 
 % training
 
-net = trainNetwork(auimdsTrain,layers,options);
+net = trainNetwork(imdsAugmented,layers,options);
 
 % evaluate performance on test set
 
@@ -315,16 +341,16 @@ YPredicted = classify(net,imdsTest);
 YTest = imdsTest.Labels;
 
 % overall accuracy
-accuracy = sum(YPredicted == YTest)/numel(YTest)
+accuracy5 = sum(YPredicted == YTest)/numel(YTest);
 
 % confusion matrix
 figure
 plotconfusion(YTest,YPredicted);
 
-% accuracy = 0.54
+% accuracy = 0.5203
 % clearly less overfitting
 
-%% ensemble of CNNs
+%% 2.6 ensemble of CNNs
 
 % define how many networks you want to train
 
@@ -338,7 +364,7 @@ nnets = 10;
 scores = zeros(numel(YTest),15);
 
 for i = 1:nnets
-   net = trainNetwork(auimdsTrain,layers,options);
+   net = trainNetwork(imdsAugmented,layers,options);
    scores = scores + predict(net, imdsTest);   
 end
 
@@ -370,4 +396,21 @@ end
 
 ensembleAccuracy = rightpred/numel(YTest);
 
-% accuracy = 0.60
+% accuracy = 0.5843
+
+% create a cropping function so that it's random also in the choice of the
+% output window size
+
+function [resizedCroppedImage] = randCrop(originalImage)
+    a = size(originalImage);
+    MinSizeH = fix((a(2)/3));
+    MaxSizeH = (a(2));
+    MinSizeL = fix(a(1)/3);
+    MaxSizeL = a(1);
+    rH = fix((MaxSizeH - MinSizeH).*rand(1,1) + MinSizeH);
+    rL = fix((MaxSizeL - MinSizeL).*rand(1,1) + MinSizeL);
+    targetSize = [rL, rH];
+    win = randomCropWindow2d(a,targetSize);
+    croppedImage = imcrop(originalImage,win);
+    resizedCroppedImage = imresize(croppedImage, [64,64]);
+ end
