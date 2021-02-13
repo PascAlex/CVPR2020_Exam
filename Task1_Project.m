@@ -1,4 +1,3 @@
-
 close all force
 
 project = fullfile('dataset','train');
@@ -16,21 +15,21 @@ quotaForEachLabel=0.85;
 %% Network design and training
 % create the structure of the network
 layers = [
-    imageInputLayer([64 64 1],'Name','input','Normalization','zscore') 
+    imageInputLayer([64 64 1],'Name','input') 
     
-    convolution2dLayer(3,8,'Name','conv_1') 
+    convolution2dLayer(3,8,'WeightsInitializer','narrow-normal','Name','conv_1') 
     
     reluLayer('Name','relu_1')
 
     maxPooling2dLayer(2,'Stride',2,'Name','maxpool_1')
     
-    convolution2dLayer(3,16,'Name','conv_2')
+    convolution2dLayer(3,16,'WeightsInitializer','narrow-normal','Name','conv_2')
     
     reluLayer('Name','relu_2')
     
     maxPooling2dLayer(2,'Stride',2,'Name','maxpool_2')
     
-    convolution2dLayer(3,32,'Name','conv_3') 
+    convolution2dLayer(3,32,'WeightsInitializer','narrow-normal','Name','conv_3') 
    
     reluLayer('Name','relu_3')
     
@@ -46,16 +45,16 @@ layers = [
 % training options
 
 options = trainingOptions('sgdm', ...
+    'InitialLearnRate', 0.001, ...
     'ValidationData',imdsValidation, ...
-    'ValidationFrequency', 10, ...
+    'ValidationFrequency', 30, ...
     'ValidationPatience', 5,...
     'Verbose',false, ...
     'MiniBatchSize',32, ...
     'ExecutionEnvironment','parallel',...
     'Plots','training-progress')
 
-% training
-
+%% training
 net = trainNetwork(imdsTrain,layers,options);
 
 %% evaluate performance on test set
@@ -77,4 +76,4 @@ accuracy = sum(YPredicted == YTest)/numel(YTest)
 figure
 plotconfusion(YTest,YPredicted);
 
-% accuracy = 0.33
+% accuracy around 30%
