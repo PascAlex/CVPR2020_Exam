@@ -110,11 +110,11 @@ plotconfusion(YTest,YPredicted)
 
 %Feature Extraction
 
-feature_train = activations(net, imdsTrain, 'fc6', 'OutputAs', 'rows'); 
+feature_train = activations(net, imds, 'fc6', 'OutputAs', 'rows'); 
 feature_test = activations(net, imdsTest, 'fc6', 'OutputAs', 'rows');
 
 %Extract labels
-YTrain1 = imdsTrain.Labels;
+YTrain1 = imds.Labels;
 YTest1 = imdsTest.Labels;
 
 %Classifier
