@@ -1,9 +1,0 @@
-\boolfalse {citerequest}\boolfalse {citetracker}\boolfalse {pagetracker}\boolfalse {backtracker}\relax 
-\babel@toc {italian}{}
-\babel@toc {italian}{}
-\contentsline {section}{Indice}{0}{section*.1}%
-\contentsline {section}{\numberline {1}Introduction}{1}{section.1}%
-\contentsline {section}{\numberline {2}Task 1}{1}{section.2}%
-\contentsline {section}{\numberline {3}Task 2}{1}{section.3}%
-\contentsline {section}{\numberline {4}Task 3}{1}{section.4}%
-\contentsline {section}{\numberline {5}Results and discussion}{1}{section.5}%
